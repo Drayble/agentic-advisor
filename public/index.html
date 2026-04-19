@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agentic Advisor</title>
+  <link rel="icon" type="image/jpeg" href="/toollogo.jpg" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; color: #1a1a2e; min-height: 100vh; }
+
+    header { background: #c8102e; color: white; padding: 16px 40px; display: flex; align-items: center; gap: 16px; }
+    header img { height: 56px; width: 56px; object-fit: contain; border-radius: 8px; background: white; padding: 3px; }
+    header h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.01em; }
+    header p { font-size: 0.85rem; opacity: 0.85; margin-top: 2px; }
+
+    .layout { display: flex; gap: 24px; max-width: 1100px; margin: 40px auto; padding: 0 20px; align-items: flex-start; }
+    .main-content { flex: 1; min-width: 0; }
+
+    .sidebar { width: 260px; flex-shrink: 0; position: sticky; top: 24px; }
+    .sidebar-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 16px; }
+    .sidebar-card h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 12px; }
+    .sidebar-stat { margin-bottom: 12px; }
+    .sidebar-stat .label { font-size: 0.75rem; color: #888; }
+    .sidebar-stat .value { font-size: 1.1rem; font-weight: 700; color: #1a1a2e; }
+
+    .gpa-warning-card { background: #fff3cd; border: 1px solid #f0a500; border-left: 4px solid #f0a500; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; }
+    .gpa-warning-card h3 { font-size: 0.9rem; color: #7a4f00; margin-bottom: 6px; }
+    .gpa-warning-card p { font-size: 0.82rem; color: #7a4f00; line-height: 1.5; }
+
+    .card { background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+    h2 { font-size: 1.1rem; color: #c8102e; margin-bottom: 16px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+
+    .upload-area { border: 2px dashed #c8102e; border-radius: 10px; padding: 40px; text-align: center; cursor: pointer; transition: background 0.2s; }
+    .upload-area:hover { background: #fff5f5; }
+    .upload-area p { color: #666; margin-top: 8px; font-size: 0.9rem; }
+    input[type="file"] { display: none; }
+
+    button { background: #c8102e; color: white; border: none; padding: 12px 28px; border-radius: 8px; font-size: 1rem; cursor: pointer; margin-top: 16px; transition: background 0.2s; }
+    button:hover { background: #a50d26; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+
+    .spinner { display: none; margin: 20px auto; width: 40px; height: 40px; border: 4px solid #f0f0f0; border-top: 4px solid #c8102e; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .class-row { display: flex; align-items: center; padding: 9px 12px; border-radius: 8px; margin-bottom: 6px; font-size: 0.88rem; gap: 10px; }
+    .class-row.green { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .class-row.red { background: #fef2f2; border: 1px solid #fecaca; }
+    .class-row.yellow { background: #fffbeb; border: 1px solid #fde68a; }
+    .class-code { font-weight: 700; min-width: 90px; color: #1a1a2e; }
+    .class-name { flex: 1; color: #333; }
+    .class-grade { min-width: 48px; text-align: center; font-weight: 600; }
+    .class-credits { min-width: 80px; text-align: right; color: #666; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+
+    .source-tag { display: inline-block; font-size: 0.78rem; padding: 3px 10px; border-radius: 10px; font-weight: 600; white-space: nowrap; cursor: default; position: relative; }
+    .source-transfer { background: #e8f0fe; color: #1a56a4; }
+    .source-ap { background: #f3e5f5; color: #6a1b9a; }
+    .source-tag:hover::after { content: attr(data-tooltip); position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background: #1a1a2e; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.82rem; white-space: nowrap; z-index: 10; pointer-events: none; }
+
+    .semester-group { margin-bottom: 20px; }
+    .semester-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #aaa; margin-bottom: 8px; }
+
+    .req-group { margin-bottom: 28px; }
+    .req-group-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #c8102e; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #f0f0f0; }
+
+    .req-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 0.88rem; flex-wrap: wrap; }
+    .req-row:last-child { border-bottom: none; }
+    .req-name { flex: 1; font-weight: 500; min-width: 160px; }
+    .req-code { color: #c8102e; font-weight: 700; font-size: 0.82rem; min-width: 90px; }
+
+    .req-fulfilled { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .fulfilled-tag { background: #e6f9f0; color: #1a7a4a; font-size: 0.75rem; padding: 3px 10px; border-radius: 10px; font-weight: 600; }
+    .overflow-note { font-size: 0.75rem; color: #1a56a4; background: #e8f0fe; padding: 3px 10px; border-radius: 10px; }
+
+    .req-select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.82rem; background: white; cursor: pointer; min-width: 220px; transition: border-color 0.2s, background 0.2s; }
+    .req-select.chosen { border-color: #1a7a4a; background: #f0fdf4; color: #1a7a4a; font-weight: 600; }
+    .req-select:disabled { background: #f4f4f4; color: #aaa; cursor: not-allowed; border-color: #e0e0e0; }
+
+    /* Credit tracker */
+    .credit-tracker { margin-bottom: 16px; }
+    .credit-tracker-label { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px; color: #555; }
+    .credit-tracker-label span:last-child { font-weight: 700; color: #1a1a2e; }
+    .progress-bar { height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+    .progress-fill.green { background: #25a868; }
+    .progress-fill.yellow { background: #f0a500; }
+    .progress-fill.red { background: #c8102e; }
+
+    /* Pathway explainer */
+    .pathway-explainer { background: #f0f7ff; border-left: 4px solid #1a56a4; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; font-size: 0.88rem; line-height: 1.7; color: #1a1a2e; }
+    .pathway-explainer strong { color: #1a56a4; }
+
+    .pathway-area { border: 1px solid #e8f0fe; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+    .pathway-area-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .pathway-area-name { font-weight: 700; font-size: 0.9rem; }
+    .pathway-area-status { font-size: 0.75rem; padding: 3px 10px; border-radius: 10px; font-weight: 600; }
+    .status-done { background: #e6f9f0; color: #1a7a4a; }
+    .status-needed { background: #fdecea; color: #c8102e; }
+    .pathway-area-note { font-size: 0.75rem; color: #888; margin-bottom: 8px; font-style: italic; }
+    .pathway-courses { display: flex; flex-wrap: wrap; gap: 6px; }
+    .pathway-course-tag { font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; background: #f4f6f9; color: #555; }
+    .pathway-course-tag.completed { background: #e6f9f0; color: #1a7a4a; font-weight: 600; }
+    .pathway-course-tag.inprogress { background: #fffbeb; color: #7a4f00; font-weight: 600; }
+
+    .plan-item { padding: 14px 0; border-bottom: 1px solid #f0f0f0; }
+    .plan-item:last-child { border-bottom: none; }
+    .plan-item .course-code { font-weight: 700; color: #c8102e; font-size: 0.82rem; }
+    .plan-item .course-name { font-weight: 600; margin: 2px 0; }
+    .plan-item .course-reason { font-size: 0.85rem; color: #666; }
+
+    select { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; margin-top: 8px; margin-bottom: 4px; }
+    .summary-box { background: #fff8e1; border-left: 4px solid #f0a500; padding: 16px 20px; border-radius: 6px; font-size: 0.95rem; line-height: 1.6; margin-bottom: 16px; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+    .badge.green { background: #e6f9f0; color: #1a7a4a; }
+    .badge.red { background: #fdecea; color: #c8102e; }
+
+    .on-track-banner { background: linear-gradient(135deg, #1a7a4a, #25a868); color: white; border-radius: 10px; padding: 28px; text-align: center; margin-bottom: 24px; }
+    .on-track-banner h2 { color: white; border: none; font-size: 1.4rem; }
+    .on-track-banner p { opacity: 0.9; margin-top: 8px; }
+
+    #startOverBtn { background: #eee; color: #333; margin-top: 8px; }
+    #startOverBtn:hover { background: #ddd; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="/toollogo.jpg" alt="Agentic Advisor Logo" />
+  <div>
+    <h1>Agentic Advisor</h1>
+    <p>Upload your Degree Works audit to get your personalized graduation plan</p>
+  </div>
+</header>
+
+<div class="layout">
+<div class="main-content">
+
+  <div class="card" id="uploadCard">
+    <h2>Step 1 — Upload Your Degree Works Audit</h2>
+    <p style="font-size:0.9rem; color:#555; margin-bottom:16px;">
+      Log into <strong>my.marist.edu</strong> → Student Records → Degree Works → Print/Export as PDF. This tool will analyze your audit and build your personalized plan.
+    </p>
+    <div class="upload-area" onclick="document.getElementById('pdfInput').click()">
+      <div style="font-size:2rem">📄</div>
+      <strong id="uploadLabel">Click to select your PDF</strong>
+      <p>Only your Degree Works audit PDF is supported</p>
+    </div>
+    <input type="file" id="pdfInput" accept=".pdf" onchange="handleFileSelect(event)" />
+    <br/>
+    <button id="analyzeBtn" onclick="analyzeAudit()" disabled>Analyze My Audit</button>
+    <div class="spinner" id="spinner"></div>
+  </div>
+
+  <div id="resultsSection" class="hidden">
+
+    <div class="on-track-banner hidden" id="onTrackBanner">
+      <h2>🎉 You're On Track to Graduate!</h2>
+      <p id="onTrackMessage"></p>
+    </div>
+
+    <div class="card">
+      <h2>✅ Completed Classes</h2>
+      <div id="completedBySemester"></div>
+    </div>
+
+    <div class="card">
+      <h2>📚 Currently In Progress</h2>
+      <div id="inProgressList"></div>
+    </div>
+
+    <div class="card hidden" id="remainingCard">
+      <h2>📋 Remaining Requirements</h2>
+      <div id="remainingList"></div>
+    </div>
+
+    <div class="card hidden" id="pathwayCard">
+    <h2>🔢 Your Pathway: <span id="pathwayTitle"></span></h2>
+     <div class="pathway-explainer">
+     <strong>How does the Pathway system work?</strong><br>
+    Your Pathway is a set of <strong>4 courses</strong> drawn from at least <strong>3 different academic areas</strong> that share a theme. Think of it as a built-in interdisciplinary focus for your degree.<br><br>
+    Pathway courses can <strong>double-dip</strong> with Breadth requirements, but a double-dipped course only counts as <strong>3 credits</strong> toward your required 36 total distribution credits.<br><br>
+    Some Pathway courses are labeled <strong>"Non-Breadth"</strong> — these count for your Pathway but do <strong>not</strong> count toward your 36 distribution credits or Liberal Arts total. Honors, special-topics, and study-abroad courses may count if approved.
+  </div>
+  <div id="pathwayAreas"></div>
+</div>
+
+    <div class="card hidden" id="plannerCard">
+      <h2>Step 2 — Plan Your Next Semester</h2>
+      <label for="goalSelect"><strong>What's your priority for next semester?</strong></label>
+      <select id="goalSelect">
+        <option value="balanced">Balanced workload</option>
+        <option value="easiest">Easiest possible semester</option>
+        <option value="gpa">GPA recovery</option>
+        <option value="fast">Graduate as fast as possible</option>
+        <option value="internship">Internship-friendly (lighter load)</option>
+      </select>
+      <button onclick="generatePlan()">Generate My Semester Plan →</button>
+      <div class="spinner" id="planSpinner"></div>
+      <div id="planResults" class="hidden" style="margin-top:20px;">
+        <h2 style="margin-bottom:12px;">📅 Your Recommended Semester</h2>
+        <div id="planList"></div>
+        <button onclick="exportCalendar()" style="margin-top:16px;">📆 Export to Calendar (.ics)</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="startOverSection" class="hidden">
+    <button id="startOverBtn" onclick="startOver()">↩ Start Over / New Audit</button>
+  </div>
+
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar" style="display:none;">
+  <div class="gpa-warning-card hidden" id="gpaWarningCard">
+    <h3>⚠️ GPA Below Requirement</h3>
+    <p>Your GPA is <strong id="gpaWarningValue"></strong>. A minimum of <strong>2.0</strong> is required to graduate.</p>
+  </div>
+  <div class="sidebar-card">
+    <h3>Academic Summary</h3>
+    <div class="sidebar-stat"><div class="label">Major</div><div class="value" id="statMajor">—</div></div>
+    <div class="sidebar-stat"><div class="label">Concentration</div><div class="value" id="statConcentration">—</div></div>
+    <div class="sidebar-stat"><div class="label">Overall GPA</div><div class="value" id="statGpa">—</div></div>
+    <div class="sidebar-stat"><div class="label">Credits Completed</div><div class="value" id="statCompleted">—</div></div>
+    <div class="sidebar-stat"><div class="label">Credits Remaining</div><div class="value" id="statRemaining">—</div></div>
+    <div class="sidebar-stat"><div class="label">Status</div><div id="trackBadge"></div></div>
+  </div>
+  <div class="sidebar-card">
+    <h3>Advisor Note</h3>
+    <p style="font-size:0.83rem; color:#555; line-height:1.6;" id="summaryBox"></p>
+  </div>
+</div>
+</div>
+
+<script>
+  let auditData = null;
+  let recommendedClasses = [];
+  let usedCodes = new Set();
+
+  // Credit tracker state — starts from audit, increases as student picks classes
+  let creditState = {
+    distribution: { earned: 0, required: 36, pending: 0 },
+    liberalArts: { earned: 0, required: 60, pending: 0 },
+  };
+
+  // Courses that count as liberal arts (end in L)
+  function isLiberalArts(code) {
+    return code && code.trim().toUpperCase().endsWith('L');
+  }
+
+  window.onload = () => {
+    const saved = localStorage.getItem('auditData');
+    if (saved) {
+      auditData = JSON.parse(saved);
+      displayResults(auditData);
+    }
+  };
+
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) {
+      document.getElementById('uploadLabel').textContent = `✅ ${file.name} selected`;
+      document.getElementById('analyzeBtn').disabled = false;
+    }
+  }
+
+  async function analyzeAudit() {
+    const file = document.getElementById('pdfInput').files[0];
+    if (!file) return;
+    document.getElementById('analyzeBtn').disabled = true;
+    document.getElementById('spinner').style.display = 'block';
+    const formData = new FormData();
+    formData.append('pdf', file);
+    try {
+      const res = await fetch('/analyze', { method: 'POST', body: formData });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      auditData = json.data;
+      localStorage.setItem('auditData', JSON.stringify(auditData));
+      displayResults(auditData);
+    } catch (err) {
+      alert('Something went wrong: ' + err.message);
+      document.getElementById('analyzeBtn').disabled = false;
+    } finally {
+      document.getElementById('spinner').style.display = 'none';
+    }
+  }
+
+  function displayResults(data) {
+    document.getElementById('uploadCard').classList.add('hidden');
+    document.getElementById('resultsSection').classList.remove('hidden');
+    document.getElementById('startOverSection').classList.remove('hidden');
+    document.getElementById('sidebar').style.display = 'block';
+
+    document.getElementById('statMajor').textContent = data.major || '—';
+    const cleanConcentration = (data.concentration || '').replace(/\(.*?\)/g, '').trim();
+    document.getElementById('statConcentration').textContent = cleanConcentration || '—';
+    document.getElementById('statGpa').textContent = data.gpa || '—';
+    document.getElementById('statCompleted').textContent = data.credits_completed || '—';
+    document.getElementById('statRemaining').textContent = data.credits_remaining || '—';
+    document.getElementById('summaryBox').textContent = data.summary_message || '';
+
+    if (data.gpa_warning) {
+      document.getElementById('gpaWarningCard').classList.remove('hidden');
+      document.getElementById('gpaWarningValue').textContent = data.gpa;
+    }
+
+    const badge = document.getElementById('trackBadge');
+    
+const unsupportedMajor =
+  data.remaining_requirements?.other?.some(r =>
+    (r.requirement || '').includes('not yet fully mapped')
+  );
+
+const creditsRemaining = parseInt(data.credits_remaining) || 0;
+
+const showGraduationBanner =
+  data.on_track_to_graduate && creditsRemaining === 0;
+
+if (showGraduationBanner) {
+  badge.innerHTML = '<span class="badge green">✅ On track</span>';
+  document.getElementById('onTrackBanner').classList.remove('hidden');
+  document.getElementById('onTrackMessage').textContent = data.summary_message;
+} else {
+  badge.innerHTML = unsupportedMajor
+    ? '<span class="badge red">⚠️ Limited support</span>'
+    : '<span class="badge red">📋 Requirements remaining</span>';
+
+  document.getElementById('onTrackBanner').classList.add('hidden');
+  document.getElementById('remainingCard').classList.remove('hidden');
+
+  if (!unsupportedMajor) {
+    document.getElementById('plannerCard').classList.remove('hidden');
+  } else {
+    document.getElementById('plannerCard').classList.add('hidden');
+  }
+}
+
+    // Initialize credit state from audit data
+    creditState.distribution.earned = parseInt(data.distribution_credits_earned) || 0;
+    creditState.liberalArts.earned = parseInt(data.liberal_arts_credits_earned) || 0;
+
+    renderCompletedBySemester(data.completed_classes || []);
+renderInProgress(data.in_progress_classes || []);
+renderRemainingRequirements(data.remaining_requirements || {}, data.fulfilled_breadth || []);
+renderPathway(data);
+renderCreditTrackers();
+  }
+
+ function renderCreditTrackers() {
+  const container = document.getElementById('creditTrackers');
+  if (!container) return; // ✅ prevents null crash for unsupported majors
+
+  container.innerHTML = '';
+
+  const trackers = [
+    {
+      label: 'Distribution Credits',
+      earned: creditState.distribution.earned,
+      pending: creditState.distribution.pending,
+      required: creditState.distribution.required,
+      id: 'tracker-distribution'
+    },
+    {
+      label: 'Liberal Arts Credits (L courses)',
+      earned: creditState.liberalArts.earned,
+      pending: creditState.liberalArts.pending,
+      required: creditState.liberalArts.required,
+      id: 'tracker-liberalarts'
+    }
+  ];
+
+  trackers.forEach(t => {
+    const total = t.earned + t.pending;
+    const pct = Math.min((total / t.required) * 100, 100);
+    const color = pct >= 100 ? 'green' : pct >= 60 ? 'yellow' : 'red';
+    const pendingNote = t.pending > 0 ? ` <span style="color:#1a56a4;font-size:0.78rem">(+${t.pending} planned)</span>` : '';
+    container.innerHTML += `
+      <div class="credit-tracker" id="${t.id}">
+        <div class="credit-tracker-label">
+          <span>${t.label}${pendingNote}</span>
+          <span>${total} / ${t.required}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill ${color}" style="width:${pct}%"></div>
+        </div>
+      </div>`;
+  });
+}
+
+  function semesterSortKey(s) {
+    if (!s) return 9999;
+    const [term, year] = s.split(' ');
+    return parseInt(year) * 10 + ({ Spring: 0, Summer: 1, Fall: 2 }[term] ?? 0);
+  }
+
+  function renderCompletedBySemester(classes) {
+    const container = document.getElementById('completedBySemester');
+    container.innerHTML = '';
+    const grouped = {};
+    classes.forEach(c => {
+      const sem = c.semester || 'Unknown Semester';
+      if (!grouped[sem]) grouped[sem] = [];
+      grouped[sem].push(c);
+    });
+    Object.keys(grouped).sort((a, b) => semesterSortKey(a) - semesterSortKey(b)).forEach(sem => {
+      const g = document.createElement('div');
+      g.className = 'semester-group';
+      g.innerHTML = `<div class="semester-label">${sem}</div>`;
+      grouped[sem].forEach(c => {
+        const color = (c.grade === 'F' || c.grade === 'NC' || c.counts_for_credit === false) ? 'red' : 'green';
+        let sourceTag = '';
+        if (c.source === 'Transfer') sourceTag = `<span class="source-tag source-transfer" data-tooltip="${c.source_detail || 'Transfer credit'}">Transfer</span>`;
+        else if (c.source === 'AP Exam') sourceTag = `<span class="source-tag source-ap" data-tooltip="${c.source_detail || 'AP Exam credit'}">AP Exam</span>`;
+        g.innerHTML += `
+          <div class="class-row ${color}">
+            <span class="class-code">${c.code}</span>
+            <span class="class-name">${c.name}</span>
+            <span class="class-grade">${c.grade === 'Transfer' ? '' : c.grade}</span>
+            <span class="class-credits" style="display:flex;align-items:center;gap:6px;justify-content:flex-end;">
+              ${sourceTag ? sourceTag : ''}
+              ${parseFloat(c.credits) === 1 ? '1 credit' : `${c.credits} credits`}
+            </span>
+          </div>`;
+      });
+      container.appendChild(g);
+    });
+  }
+
+  function renderInProgress(classes) {
+    const container = document.getElementById('inProgressList');
+    container.innerHTML = '';
+    classes.forEach(c => {
+      container.innerHTML += `
+        <div class="class-row yellow">
+          <span class="class-code">${c.code}</span>
+          <span class="class-name">${c.name}</span>
+          <span class="class-grade">IP</span>
+          <span class="class-credits">${parseFloat(c.credits) === 1 ? '1 credit' : `${c.credits} credits`}</span>
+        </div>`;
+    });
+  }
+
+
+  function renderRemainingRequirements(reqs, fulfilledBreadth) {
+  const container = document.getElementById('remainingList');
+  container.innerHTML = '';
+  usedCodes = new Set();
+
+  const groupLabels = {
+    core: '💻 Major Core Requirements',
+    distribution: '📚 Distribution / Breadth',
+    pathway: '🔢 Pathway Requirements',
+    concentration: '🎯 Concentration Requirements',
+    other: '📋 Other Requirements'
+  };
+
+  // Distribution breadth areas that are fulfilled but can count as overflow
+  const overflowAreas = (fulfilledBreadth || []);
+
+  // Local client-side overflow options map
+  const overflowBucketOptions = {
+    "3 credits in Natural Science": [
+      { code: "ANTH 101L", name: "Introduction to Physical Anthropology" },
+      { code: "BIOL 101L", name: "Topics in Biology" },
+      { code: "BIOL 120L", name: "Agents of Biowarfare" },
+      { code: "BIOL 214L", name: "Life on Earth" },
+      { code: "BIOL 232L", name: "Sex, Evolution, and Behavior" },
+      { code: "BIOL 237L", name: "Human Biology" },
+      { code: "CHEM 101L", name: "Introduction to Chemistry" },
+      { code: "ENSC 101L", name: "Introduction to Environmental Issues" },
+      { code: "ENSC 210L", name: "Introduction to Geology" },
+      { code: "ENSC 306L", name: "Environmental Health" },
+      { code: "HLTH 225L", name: "Topics in Nutrition" },
+      { code: "PHYS 108L", name: "Introduction to Cosmology" },
+      { code: "PHYS 193L", name: "Physics of Modern Technology" }
+    ],
+    "3 credits in Literature": [
+      { code: "ENG 170L", name: "World Literature" },
+      { code: "ENG 201L", name: "Introduction to Linguistics" },
+      { code: "ENG 205L", name: "Modern Speculative Fiction" },
+      { code: "ENG 210L", name: "American Literature I" },
+      { code: "ENG 211L", name: "American Literature II" },
+      { code: "ENG 214L", name: "Religious Themes in Literature" },
+      { code: "ENG 220L", name: "Literature and Gender" },
+      { code: "ENG 231L", name: "Literature of the Hudson River Valley" },
+      { code: "ENG 232L", name: "Literature and Nature" },
+      { code: "ENG 233L", name: "Law and Literature" },
+      { code: "ENG 234L", name: "Graphic Narratives" },
+      { code: "ENG 237L", name: "Children's and YA Literature" },
+      { code: "ENG 240L", name: "American Short Fiction" },
+      { code: "ENG 255L", name: "Introduction to Literature" },
+      { code: "ENG 261L", name: "Spanish Literature in Translation: The Novel" },
+      { code: "ENG 264L", name: "Latin American Literature in Translation" },
+      { code: "ENG 270L", name: "Classics of Western Literature I" },
+      { code: "ENG 271L", name: "Classics of Western Literature II" }
+    ],
+    "3 credits in Math": [
+      { code: "MATH 110L", name: "Excursions in Mathematics: Classical Models" },
+      { code: "MATH 111L", name: "Excursions in Mathematics: Modern Models" },
+      { code: "MATH 130L", name: "Introductory Statistics I" },
+      { code: "MATH 241L", name: "Calculus" },
+      { code: "MATH_ANY_200", name: "Any 200-level MATH course" }
+    ],
+    "3 credits in Social Science": [
+      { code: "ANTH 102L", name: "Introduction to Cultural Anthropology" },
+      { code: "ANTH 120L", name: "An Introduction to Archaeology" },
+      { code: "ANTH 230L", name: "American Culture I" },
+      { code: "ANTH 231L", name: "American Culture II" },
+      { code: "ANTH 232L", name: "Religion and Culture" },
+      { code: "ANTH 233L", name: "Native Americans" },
+      { code: "ECON 103L", name: "Principles of Microeconomics" },
+      { code: "ECON 104L", name: "Principles of Macroeconomics" },
+      { code: "ECON 150L", name: "Economics of Social Issues" },
+      { code: "ECON 200L", name: "Economies of Gender" },
+      { code: "ECON 210L", name: "Innovation in the Hudson Valley" },
+      { code: "POSC 102L", name: "Introduction to Law" },
+      { code: "POSC 103L", name: "Introduction to Global Issues" },
+      { code: "POSC 105L", name: "Origins of the American Legal System" },
+      { code: "POSC 110L", name: "American National Government" },
+      { code: "POSC 111L", name: "Introduction to Comparative Politics" },
+      { code: "POSC 113L", name: "International Relations" },
+      { code: "POSC_ANY_200", name: "Any 200-level Political Science course" },
+      { code: "PSYC 101L", name: "Introduction to Psychology" },
+      { code: "PSYC 201L", name: "Personality Development" },
+      { code: "PSYC 202L", name: "Abnormal Psychology" },
+      { code: "PSYC 203L", name: "Theories of Personality" },
+      { code: "PSYC 206L", name: "Psycho-Biological Sex Differences" },
+      { code: "PSYC 207L", name: "The Exceptional Child" },
+      { code: "PSYC 208L", name: "Educational Psychology" },
+      { code: "PSYC 210L", name: "The Psychology of Sleep" },
+      { code: "PSYC 211L", name: "Sports and Exercise Psychology" },
+      { code: "PSYC 215L", name: "Psychology of Interpersonal Communication" },
+      { code: "PSYC 220L", name: "Social Psychology" },
+      { code: "PSYC 222L", name: "Community Psychology" },
+      { code: "PSYC 301L", name: "Biopsychology and Lab" },
+      { code: "PSYC 302L", name: "Neurobiology of Learning and Memory and Lab" },
+      { code: "PSYC 303L", name: "Developmental Neuropsychology and Lab" },
+      { code: "PSYC 304L", name: "Psychopharmacology and Lab" },
+      { code: "PSYC 305L", name: "Neurobiology and Neuropsychology of Learning Disabilities and Lab" },
+      { code: "PSYC 315L", name: "Human Factors Psychology" },
+      { code: "PSYC 317L", name: "Child Development" },
+      { code: "PSYC 318L", name: "Psychology of the Adolescent" },
+      { code: "PSYC 321L", name: "Adult Development" },
+      { code: "PSYC 330L", name: "Culture and Psychology" },
+      { code: "PSYC 332L", name: "Fundamentals of Counseling" },
+      { code: "PSYC 342L", name: "Learning and Cognition" },
+      { code: "PSYC 348L", name: "Psychological Perspectives on Criminal Behavior" },
+      { code: "PSYC 385L", name: "Industrial Psychology" },
+      { code: "SOC 101L", name: "Introduction to Sociology" },
+      { code: "SOC_ANY_200", name: "Any 200-level SOC course (SOC 101 prerequisite)" }
+    ],
+    "3 credits in Fine Arts": [
+      { code: "ART 101L", name: "Fundamentals of Art and Design (majors only)" },
+      { code: "ART 110L", name: "Basic Drawing" },
+      { code: "ART 125L", name: "Arts and Values" },
+      { code: "ART 160L", name: "History of Western Art I" },
+      { code: "ART 180L", name: "History of Western Art II" },
+      { code: "ART 220L", name: "History of Photography" },
+      { code: "ART 230L", name: "Greek and Roman Art" },
+      { code: "ART 245L", name: "Medieval Art" },
+      { code: "ART 255L", name: "Pre-Columbian Art" },
+      { code: "ART 256L", name: "Chinese Art" },
+      { code: "ART 265L", name: "Introduction to Renaissance Art" },
+      { code: "ART 270L", name: "Russian and Soviet Art" },
+      { code: "ART 280L", name: "American Art" },
+      { code: "ART 281L", name: "History of Costume" },
+      { code: "ART 290L", name: "Museum Studies" },
+      { code: "ART 350L", name: "Contemporary Art" },
+      { code: "ART 362L", name: "Art & Technology" },
+      { code: "ART 365L", name: "History of 19th-Century Art" },
+      { code: "ART 366L", name: "History of 20th-Century Art" },
+      { code: "ART 380L", name: "Renaissance Art" },
+      { code: "ENG 150L", name: "Introduction to Theatre" },
+      { code: "ENG 227L", name: "Acting I" },
+      { code: "ENG 280L", name: "Creative Writing" },
+      { code: "ITAL 308L", name: "Italian Cinema" },
+      { code: "MDIA 120L", name: "Art of Film" },
+      { code: "MUS 105L", name: "Introduction to Music" },
+      { code: "MUS 106L", name: "Jazz and Sound" },
+      { code: "MUS 120L", name: "Theory of Music I" },
+      { code: "MUS 220L", name: "Theory of Music II" },
+      { code: "MUS 225L", name: "Insight into Music" },
+      { code: "MUS 226L", name: "Music Cultures of the World" },
+      { code: "MUS 242L", name: "Popular Music in America" },
+      { code: "MUS 248L", name: "History of Motion Picture Music" },
+      { code: "PHIL 237L", name: "Aesthetics" },
+      { code: "PHIL 333L", name: "Philosophy and Film" },
+      { code: "SPAN 330L", name: "Themes in Spanish Cinema" },
+      { code: "SPAN 335L", name: "Themes in Latin American Cinema" }
+    ],
+    "3 credits in Ethics / Applied Ethics / Religious Studies": [
+      { code: "PHIL 200L", name: "Ethics" },
+      { code: "PHIL 247L", name: "Contemporary Moral Problems" },
+      { code: "PHIL 301L", name: "Environmental Ethics" },
+      { code: "PHIL 302L", name: "Moral Cognition" },
+      { code: "PHIL 346L", name: "Bioethics" },
+      { code: "PHIL 348L", name: "Ethics of Food" },
+      { code: "REST", name: "Any Religious Studies (REST) course" },
+      { code: "CMPT 305L", name: "Technology, Ethics, & Society" },
+      { code: "MDIA 316L", name: "Ethics & Gaming" },
+      { code: "CRJU 310L", name: "Criminal Justice Ethics" },
+      { code: "BUS 312L", name: "Ethics & Finance Regulations" },
+      { code: "BUS 319N", name: "Ethical Decision Making in Business" }
+    ]
+  };
+
+  const groupOrder = ['core', 'distribution', 'pathway', 'concentration', 'other'];
+
+  groupOrder.forEach(groupKey => {
+    const items = reqs[groupKey];
+    if (!items || items.length === 0) return;
+
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'req-group';
+    groupDiv.innerHTML = `<div class="req-group-title">${groupLabels[groupKey]}</div>`;
+
+    if (groupKey === 'pathway') {
+      const trackerMount = document.createElement('div');
+      trackerMount.id = 'creditTrackers';
+      trackerMount.style.marginBottom = '20px';
+      groupDiv.appendChild(trackerMount);
+    }
+
+    items.forEach((req, idx) => {
+      const rowId = `${groupKey}-${idx}`;
+      const row = document.createElement('div');
+      row.className = 'req-row';
+
+      const nameSpan = `<span class="req-name">${req.requirement}</span>`;
+
+      if (req.note && !req.options?.length && !req.code) {
+        row.innerHTML = `${nameSpan}<span style="font-size:0.8rem;color:#888;font-style:italic;">${req.note}</span>`;
+      } else if (!req.options || req.options.length === 0) {
+        row.innerHTML = `${nameSpan}<span class="req-code">${req.code || '—'}</span>`;
+      } else {
+        const selectId = `sel-${rowId}`;
+        const isConcentration = groupKey === 'concentration';
+        const isFulfilledBreadth = groupKey === 'distribution' && overflowAreas.includes(req.requirement);
+
+        let optionsHtml = `<option value="">— Select a course —</option>`;
+        req.options.forEach(opt => {
+          optionsHtml += `<option value="${opt.code}" data-credits="${opt.credits || 3}">${opt.code} — ${opt.name}</option>`;
+        });
+
+        const selectWrapper = document.createElement('div');
+        selectWrapper.style.cssText = 'display:flex; flex-direction:column; gap:6px; min-width:220px;';
+
+        if (!isConcentration && !isFulfilledBreadth) {
+          const reqLabel = document.createElement('div');
+          reqLabel.style.cssText = 'font-size:0.72rem; color:#c8102e; font-weight:600;';
+          reqLabel.textContent = '★ At least 1 required';
+          selectWrapper.appendChild(reqLabel);
+        }
+
+        const makeSelectRow = (id) => {
+          const rowWrap = document.createElement('div');
+          rowWrap.style.cssText = 'display:flex; gap:8px; align-items:center;';
+
+          const sel = document.createElement('select');
+          sel.className = 'req-select';
+          sel.id = id;
+          sel.innerHTML = optionsHtml;
+          sel.addEventListener('change', () => handleReqSelect(id));
+
+          rowWrap.appendChild(sel);
+
+          if (id !== selectId) {
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.textContent = 'Remove';
+            removeBtn.style.cssText = 'margin-top:0; padding:6px 10px; font-size:0.75rem; background:#eee; color:#333; border:none; border-radius:6px; cursor:pointer;';
+            removeBtn.onclick = () => {
+              rowWrap.remove();
+              updateCreditTrackers();
+            };
+            rowWrap.appendChild(removeBtn);
+          }
+
+          return rowWrap;
+        };
+
+        if (isConcentration || !isFulfilledBreadth) {
+          selectWrapper.appendChild(makeSelectRow(selectId));
+        }
+
+        if (!isConcentration) {
+          const addBtn = document.createElement('button');
+          addBtn.type = 'button';
+          addBtn.textContent = '+ Add another (overflow credit)';
+          addBtn.style.cssText = 'margin-top:2px; padding:4px 10px; font-size:0.75rem; background:#e8f0fe; color:#1a56a4; border:none; border-radius:6px; cursor:pointer; width:fit-content;';
+          addBtn.onclick = () => {
+            const extraId = `${selectId}-x${Date.now()}`;
+            selectWrapper.insertBefore(makeSelectRow(extraId), addBtn);
+          };
+          selectWrapper.appendChild(addBtn);
+        }
+
+        row.innerHTML = nameSpan;
+        row.appendChild(selectWrapper);
+      }
+
+      groupDiv.appendChild(row);
+
+      if (overflowAreas.includes(req.requirement)) {
+        const overflowRow = document.createElement('div');
+        overflowRow.style.cssText = 'padding: 4px 0 8px 0; font-size: 0.78rem; color: #1a56a4;';
+        overflowRow.textContent = '↳ Already fulfilled — additional courses here count toward your 36 distribution credits';
+        groupDiv.appendChild(overflowRow);
+      }
+    });
+
+    // Add fulfilled-but-optional overflow buckets AFTER unmet required distribution buckets
+    if (groupKey === 'distribution' && overflowAreas.length > 0) {
+      const overflowDiv = document.createElement('div');
+      overflowDiv.style.marginTop = '16px';
+
+      const title = document.createElement('div');
+      title.style.cssText = 'font-size:0.8rem; font-weight:700; color:#1a56a4; margin-bottom:8px;';
+      title.textContent = '➕ Optional Overflow Credit Buckets';
+      overflowDiv.appendChild(title);
+
+      const fulfilledOverflowReqs = overflowAreas
+        .filter(reqName => !items.some(i => i.requirement === reqName))
+        .filter(reqName => overflowBucketOptions[reqName]);
+
+      fulfilledOverflowReqs.forEach((reqName, idx) => {
+        const row = document.createElement('div');
+        row.className = 'req-row';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'req-name';
+        nameSpan.textContent = reqName;
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display:flex; flex-direction:column; gap:6px; min-width:220px;';
+
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.textContent = '+ Add another (overflow credit)';
+        addBtn.style.cssText = 'padding:4px 10px; font-size:0.75rem; background:#e8f0fe; color:#1a56a4; border:none; border-radius:6px; cursor:pointer; width:fit-content;';
+
+        const makeSelect = (id) => {
+          const rowWrap = document.createElement('div');
+          rowWrap.style.cssText = 'display:flex; gap:8px; align-items:center;';
+
+          const sel = document.createElement('select');
+          sel.className = 'req-select';
+          sel.id = id;
+
+          let optionsHtml = `<option value="">— Select a course —</option>`;
+          overflowBucketOptions[reqName].forEach(opt => {
+            optionsHtml += `<option value="${opt.code}" data-credits="${opt.credits || 3}">${opt.code} — ${opt.name}</option>`;
+          });
+
+          sel.innerHTML = optionsHtml;
+          sel.addEventListener('change', () => handleReqSelect(id));
+
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.textContent = 'Remove';
+          removeBtn.style.cssText = 'margin-top:0; padding:6px 10px; font-size:0.75rem; background:#eee; color:#333; border:none; border-radius:6px; cursor:pointer;';
+          removeBtn.onclick = () => {
+            rowWrap.remove();
+            updateCreditTrackers();
+          };
+
+          rowWrap.appendChild(sel);
+          rowWrap.appendChild(removeBtn);
+          return rowWrap;
+        };
+
+        addBtn.onclick = () => {
+          const id = `overflow-${idx}-${Date.now()}`;
+          wrapper.insertBefore(makeSelect(id), addBtn);
+        };
+
+        wrapper.appendChild(addBtn);
+        row.appendChild(nameSpan);
+        row.appendChild(wrapper);
+        overflowDiv.appendChild(row);
+      });
+
+      if (fulfilledOverflowReqs.length > 0) {
+        groupDiv.appendChild(overflowDiv);
+      }
+    }
+
+    container.appendChild(groupDiv);
+  });
+}
+
+
+  function handleReqSelect(selectId) {
+    const sel = document.getElementById(selectId);
+    const chosen = sel.value;
+
+    // Rebuild used codes
+    usedCodes = new Set();
+    document.querySelectorAll('.req-select').forEach(s => {
+      if (s.value && s.id !== selectId) usedCodes.add(s.value);
+    });
+    if (chosen) usedCodes.add(chosen);
+
+    // Style chosen select
+    sel.className = chosen ? 'req-select chosen' : 'req-select';
+
+    // Gray out used options in all OTHER dropdowns
+    document.querySelectorAll('.req-select').forEach(s => {
+      if (s.id === selectId) return;
+      Array.from(s.options).forEach(o => {
+        if (o.value && usedCodes.has(o.value) && o.value !== s.value) {
+          o.disabled = true;
+          if (!o.text.includes('⛔')) o.text = o.text + ' ⛔ (used in another requirement)';
+        } else if (o.value !== s.value) {
+          o.disabled = false;
+          o.text = o.text.replace(' ⛔ (used in another requirement)', '');
+        }
+      });
+    });
+
+    // Update credit trackers
+    updateCreditTrackers();
+  }
+
+  function updateCreditTrackers() {
+  let distPending = 0;
+  let laPending = 0;
+
+  // Only count distribution and breadth selects, NOT concentration
+  document.querySelectorAll('.req-select').forEach(s => {
+    if (!s.value) return;
+
+    // Skip concentration selects
+    const rowId = s.id || '';
+    if (rowId.startsWith('sel-concentration')) return;
+
+    const selectedOpt = s.options[s.selectedIndex];
+    const credits = parseInt(selectedOpt.dataset.credits) || 3;
+    const code = s.value.trim().toUpperCase();
+
+    // Only L-suffix courses count as liberal arts
+    const isL = code.endsWith('L');
+
+    distPending += credits;
+    if (isL) laPending += credits;
+  });
+
+  creditState.distribution.pending = distPending;
+  creditState.liberalArts.pending = laPending;
+  renderCreditTrackers();
+}
+
+
+function renderPathway(data) {
+  if (!data.pathway_name) return;
+  document.getElementById('pathwayCard').classList.remove('hidden');
+  document.getElementById('pathwayTitle').textContent = data.pathway_name;
+
+  const container = document.getElementById('pathwayAreas');
+  container.innerHTML = '';
+
+  const pathwayDef = window.PATHWAY_DATA?.[data.pathway_name];
+  if (!pathwayDef) return;
+
+  const normalize = code => (code || '').trim().toUpperCase();
+
+  const completedCodes = (data.completed_classes || [])
+    .filter(c => c.counts_for_credit !== false)
+    .map(c => normalize(c.code));
+
+  const inProgressCodes = (data.in_progress_classes || [])
+    .map(c => normalize(c.code));
+
+  const areas = pathwayDef.areas.map(area => {
+    const validCodes = (area.courses || []).map(c => normalize(c.code));
+
+    const completed = completedCodes.filter(code => validCodes.includes(code));
+    const inProgress = inProgressCodes.filter(code => validCodes.includes(code));
+
+    return {
+      area_number: area.area,
+      area_name: area.name,
+      completed_courses: completed,
+      in_progress_courses: inProgress
+    };
+  });
+
+  const minCourses = 4;
+  const minAreas = 3;
+
+  const areasWithCompletion = areas.filter(a =>
+    (a.completed_courses || []).length > 0 || (a.in_progress_courses || []).length > 0
+  );
+
+  const totalCoursesCompleted = areas.reduce((sum, a) =>
+    sum + (a.completed_courses || []).length + (a.in_progress_courses || []).length, 0
+  );
+
+  const summary = document.createElement('div');
+  summary.style.cssText = 'margin-bottom:16px; padding:14px 16px; background:#f0f7ff; border-radius:10px; font-size:0.88rem; line-height:1.7;';
+
+  let statusMsg = '';
+  if (totalCoursesCompleted >= minCourses && areasWithCompletion.length >= minAreas) {
+    statusMsg = `✅ <strong>Pathway requirement met!</strong> You've taken ${totalCoursesCompleted} course(s) across ${areasWithCompletion.length} area(s).`;
+  } else {
+    const coursesNeeded = Math.max(0, minCourses - totalCoursesCompleted);
+    const areasNeeded = Math.max(0, minAreas - areasWithCompletion.length);
+    statusMsg = `You've taken <strong>${totalCoursesCompleted} course(s)</strong> across <strong>${areasWithCompletion.length} area(s)</strong>. `;
+    if (coursesNeeded > 0) statusMsg += `You need at least <strong>${coursesNeeded} more course(s)</strong> `;
+    if (areasNeeded > 0) statusMsg += `from at least <strong>${areasNeeded} more different area(s)</strong>`;
+    statusMsg += '.';
+  }
+  summary.innerHTML = statusMsg;
+  container.appendChild(summary);
+
+  areas.forEach(area => {
+    const completed = area.completed_courses || [];
+    const inProgress = area.in_progress_courses || [];
+    const hasActivity = completed.length > 0 || inProgress.length > 0;
+
+    const areaDiv = document.createElement('div');
+    areaDiv.className = 'pathway-area';
+    areaDiv.style.marginBottom = '10px';
+
+    areaDiv.innerHTML = `
+      <div class="pathway-area-header">
+        <span class="pathway-area-name">Area ${area.area_number}: ${area.area_name}</span>
+        <span class="pathway-area-status ${hasActivity ? 'status-done' : 'status-needed'}">${hasActivity ? `✅ ${completed.length + inProgress.length} course(s)` : '❌ None taken'}</span>
+      </div>
+      <div class="pathway-courses" style="margin-top:8px;">
+        ${completed.map(c => `<span class="pathway-course-tag completed">${c} ✓</span>`).join('')}
+        ${inProgress.map(c => `<span class="pathway-course-tag inprogress">${c} (IP)</span>`).join('')}
+      </div>`;
+    container.appendChild(areaDiv);
+  });
+}
+
+
+  // Pathway data available client-side for rendering
+  window.PATHWAY_DATA = {
+  "Quantitative Studies": {
+    minAreas: 3,
+    areas: [
+      {
+        area: 1,
+        name: "Music Theory",
+        courses: [
+          { code: "MUS 106L" },
+          { code: "MUS 120L" },
+          { code: "MUS 220L" }
+        ]
+      },
+      {
+        area: 2,
+        name: "Mathematics",
+        courses: [
+          { code: "MATH 130L" },
+          { code: "MATH 205L" },
+          { code: "MATH 210L" },
+          { code: "MATH 241L" },
+          { code: "MATH 242L" }
+        ]
+      },
+      {
+        area: 3,
+        name: "Natural Sciences",
+        courses: [
+          { code: "CHEM 101L" },
+          { code: "CHEM 112L" },
+          { code: "ENSC 305L" },
+          { code: "PHYS 108L" },
+          { code: "PHYS 201L" },
+          { code: "PHYS 202L" },
+          { code: "PHYS 211L" },
+          { code: "PHYS 212L" },
+          { code: "PHYS 221L" }
+        ]
+      },
+      {
+        area: 4,
+        name: "Philosophy of Logic",
+        courses: [
+          { code: "PHIL 203L" },
+          { code: "PHIL 235L" },
+          { code: "PHIL 310L" }
+        ]
+      },
+      {
+        area: 5,
+        name: "Social Sciences (Quantitative)",
+        courses: [
+          { code: "ECON 104L" },
+          { code: "ECON 150L" },
+          { code: "ECON 305L" },
+          { code: "POSC 121L" },
+          { code: "POSC 122L" },
+          { code: "POSC 124L" },
+          { code: "POSC 235L" },
+          { code: "POSC 289L" },
+          { code: "POSC 325L" },
+          { code: "POSC 342L" },
+          { code: "PSYC 350L" },
+          { code: "SOCW 383N" } // KEEP N — this is correct
+        ]
+      },
+      {
+        area: 6,
+        name: "Computing & Data (Non-Breadth)",
+        note: "Only ONE course allowed. Does not count toward 36 distribution credits.",
+        courses: [
+          { code: "COM 200L" },
+          { code: "CMPT 120L" },
+          { code: "CRJU 374L" },
+          { code: "ENG 222L" },
+          { code: "DATA 220L" },
+          { code: "FASH 304N" } // KEEP N — this is correct
+        ]
+      }
+    ]
+  }
+};
+
+  async function generatePlan() {
+    const goal = document.getElementById('goalSelect').value;
+    document.getElementById('planSpinner').style.display = 'block';
+    try {
+      const res = await fetch('/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auditData, goal })
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      recommendedClasses = json.data;
+      displayPlan(json.data);
+    } catch (err) {
+      alert('Something went wrong: ' + err.message);
+    } finally {
+      document.getElementById('planSpinner').style.display = 'none';
+    }
+  }
+
+  function displayPlan(classes) {
+    const planList = document.getElementById('planList');
+    planList.innerHTML = '';
+    classes.forEach(c => {
+      planList.innerHTML += `
+        <div class="plan-item">
+          <div class="course-code">${c.code}</div>
+          <div class="course-name">${c.name}</div>
+          <div class="course-reason">💡 ${c.reason}</div>
+        </div>`;
+    });
+    document.getElementById('planResults').classList.remove('hidden');
+  }
+
+  function exportCalendar() {
+    alert('Calendar export — coming soon!');
+  }
+
+  function startOver() {
+    localStorage.removeItem('auditData');
+    location.reload();
+  }
+</script>
+</body>
+</html>
