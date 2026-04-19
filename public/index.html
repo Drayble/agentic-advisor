@@ -76,7 +76,7 @@
     .req-select.chosen { border-color: #1a7a4a; background: #f0fdf4; color: #1a7a4a; font-weight: 600; }
     .req-select:disabled { background: #f4f4f4; color: #aaa; cursor: not-allowed; border-color: #e0e0e0; }
 
-    /* Credit tracker */
+    
     .credit-tracker { margin-bottom: 16px; }
     .credit-tracker-label { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px; color: #555; }
     .credit-tracker-label span:last-child { font-weight: 700; color: #1a1a2e; }
@@ -86,7 +86,7 @@
     .progress-fill.yellow { background: #f0a500; }
     .progress-fill.red { background: #c8102e; }
 
-    /* Pathway explainer */
+    
     .pathway-explainer { background: #f0f7ff; border-left: 4px solid #1a56a4; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; font-size: 0.88rem; line-height: 1.7; color: #1a1a2e; }
     .pathway-explainer strong { color: #1a56a4; }
 
@@ -134,7 +134,10 @@
 </header>
 
 <div class="layout">
+<!-- MAIN PAGE LAYOUT -->
 <div class="main-content">
+
+  <!-- PRIMARY USER WORKFLOW -->
 
   <div class="card" id="uploadCard">
     <h2>Step 1 — Upload Your Degree Works Audit</h2>
@@ -212,7 +215,7 @@
 
 </div>
 
-<!-- SIDEBAR -->
+<!-- SIDEBAR SUMMARY PANEL -->
 <div class="sidebar" id="sidebar" style="display:none;">
   <div class="gpa-warning-card hidden" id="gpaWarningCard">
     <h3>⚠️ GPA Below Requirement</h3>
@@ -235,21 +238,25 @@
 </div>
 
 <script>
+  // STORES THE CURRENT AUDIT DATA, RECOMMENDED COURSES, AND USED SELECTED CODES
   let auditData = null;
   let recommendedClasses = [];
   let usedCodes = new Set();
 
-  // Credit tracker state — starts from audit, increases as student picks classes
+  
+  // TRACKS CREDIT PROGRESS AND PLANNED CREDIT SELECTIONS
   let creditState = {
     distribution: { earned: 0, required: 36, pending: 0 },
     liberalArts: { earned: 0, required: 60, pending: 0 },
   };
 
-  // Courses that count as liberal arts (end in L)
+  
+  // RETURNS TRUE WHEN A COURSE COUNTS TOWARD LIBERAL ARTS CREDIT
   function isLiberalArts(code) {
     return code && code.trim().toUpperCase().endsWith('L');
   }
 
+  // RESTORES SAVED AUDIT DATA WHEN THE PAGE RELOADS
   window.onload = () => {
     const saved = localStorage.getItem('auditData');
     if (saved) {
@@ -258,6 +265,7 @@
     }
   };
 
+  // UPDATES THE UI AFTER A USER CHOOSES A PDF
   function handleFileSelect(e) {
     const file = e.target.files[0];
     if (file) {
@@ -266,6 +274,7 @@
     }
   }
 
+  // SENDS THE UPLOADED AUDIT TO THE SERVER FOR ANALYSIS
   async function analyzeAudit() {
     const file = document.getElementById('pdfInput').files[0];
     if (!file) return;
@@ -288,6 +297,7 @@
     }
   }
 
+  // POPULATES THE RESULTS VIEW WITH AUDIT DATA
   function displayResults(data) {
     document.getElementById('uploadCard').classList.add('hidden');
     document.getElementById('resultsSection').classList.remove('hidden');
@@ -338,7 +348,7 @@ if (showGraduationBanner) {
   }
 }
 
-    // Initialize credit state from audit data
+    
     creditState.distribution.earned = parseInt(data.distribution_credits_earned) || 0;
     creditState.liberalArts.earned = parseInt(data.liberal_arts_credits_earned) || 0;
 
@@ -349,9 +359,10 @@ renderPathway(data);
 renderCreditTrackers();
   }
 
+ // RENDERS THE DISTRIBUTION AND LIBERAL ARTS CREDIT BARS
  function renderCreditTrackers() {
   const container = document.getElementById('creditTrackers');
-  if (!container) return; // ✅ prevents null crash for unsupported majors
+  if (!container) return; 
 
   container.innerHTML = '';
 
@@ -390,12 +401,14 @@ renderCreditTrackers();
   });
 }
 
+  // CREATES A SORT KEY SO SEMESTERS DISPLAY IN ORDER
   function semesterSortKey(s) {
     if (!s) return 9999;
     const [term, year] = s.split(' ');
     return parseInt(year) * 10 + ({ Spring: 0, Summer: 1, Fall: 2 }[term] ?? 0);
   }
 
+  // GROUPS COMPLETED CLASSES BY SEMESTER AND RENDERS THEM
   function renderCompletedBySemester(classes) {
     const container = document.getElementById('completedBySemester');
     container.innerHTML = '';
@@ -429,6 +442,7 @@ renderCreditTrackers();
     });
   }
 
+  // RENDERS CURRENTLY IN-PROGRESS COURSES
   function renderInProgress(classes) {
     const container = document.getElementById('inProgressList');
     container.innerHTML = '';
@@ -443,7 +457,7 @@ renderCreditTrackers();
     });
   }
 
-
+  // RENDERS REMAINING REQUIREMENTS AND COURSE SELECTION DROPDOWNS
   function renderRemainingRequirements(reqs, fulfilledBreadth) {
   const container = document.getElementById('remainingList');
   container.innerHTML = '';
@@ -457,10 +471,10 @@ renderCreditTrackers();
     other: '📋 Other Requirements'
   };
 
-  // Distribution breadth areas that are fulfilled but can count as overflow
+  
   const overflowAreas = (fulfilledBreadth || []);
 
-  // Local client-side overflow options map
+  
   const overflowBucketOptions = {
     "3 credits in Natural Science": [
       { code: "ANTH 101L", name: "Introduction to Physical Anthropology" },
@@ -712,7 +726,7 @@ renderCreditTrackers();
       }
     });
 
-    // Add fulfilled-but-optional overflow buckets AFTER unmet required distribution buckets
+    
     if (groupKey === 'distribution' && overflowAreas.length > 0) {
       const overflowDiv = document.createElement('div');
       overflowDiv.style.marginTop = '16px';
@@ -792,22 +806,22 @@ renderCreditTrackers();
   });
 }
 
-
+  // UPDATES DROPDOWN STATES AFTER A REQUIREMENT CHOICE IS MADE
   function handleReqSelect(selectId) {
     const sel = document.getElementById(selectId);
     const chosen = sel.value;
 
-    // Rebuild used codes
+    
     usedCodes = new Set();
     document.querySelectorAll('.req-select').forEach(s => {
       if (s.value && s.id !== selectId) usedCodes.add(s.value);
     });
     if (chosen) usedCodes.add(chosen);
 
-    // Style chosen select
+    
     sel.className = chosen ? 'req-select chosen' : 'req-select';
 
-    // Gray out used options in all OTHER dropdowns
+    
     document.querySelectorAll('.req-select').forEach(s => {
       if (s.id === selectId) return;
       Array.from(s.options).forEach(o => {
@@ -821,19 +835,20 @@ renderCreditTrackers();
       });
     });
 
-    // Update credit trackers
+    
     updateCreditTrackers();
   }
 
+  // RECALCULATES PLANNED CREDIT TOTALS FROM THE CURRENT SELECTIONS
   function updateCreditTrackers() {
   let distPending = 0;
   let laPending = 0;
 
-  // Only count distribution and breadth selects, NOT concentration
+  
   document.querySelectorAll('.req-select').forEach(s => {
     if (!s.value) return;
 
-    // Skip concentration selects
+    
     const rowId = s.id || '';
     if (rowId.startsWith('sel-concentration')) return;
 
@@ -841,7 +856,7 @@ renderCreditTrackers();
     const credits = parseInt(selectedOpt.dataset.credits) || 3;
     const code = s.value.trim().toUpperCase();
 
-    // Only L-suffix courses count as liberal arts
+    
     const isL = code.endsWith('L');
 
     distPending += credits;
@@ -853,7 +868,7 @@ renderCreditTrackers();
   renderCreditTrackers();
 }
 
-
+// RENDERS PATHWAY COMPLETION STATUS FROM THE CLIENT-SIDE PATHWAY MAP
 function renderPathway(data) {
   if (!data.pathway_name) return;
   document.getElementById('pathwayCard').classList.remove('hidden');
@@ -938,8 +953,8 @@ function renderPathway(data) {
   });
 }
 
-
-  // Pathway data available client-side for rendering
+  
+  // CLIENT-SIDE PATHWAY DATA USED FOR DISPLAY ONLY
   window.PATHWAY_DATA = {
   "Quantitative Studies": {
     minAreas: 3,
@@ -1003,7 +1018,7 @@ function renderPathway(data) {
           { code: "POSC 325L" },
           { code: "POSC 342L" },
           { code: "PSYC 350L" },
-          { code: "SOCW 383N" } // KEEP N — this is correct
+          { code: "SOCW 383N" } 
         ]
       },
       {
@@ -1016,13 +1031,14 @@ function renderPathway(data) {
           { code: "CRJU 374L" },
           { code: "ENG 222L" },
           { code: "DATA 220L" },
-          { code: "FASH 304N" } // KEEP N — this is correct
+          { code: "FASH 304N" } 
         ]
       }
     ]
   }
 };
 
+  // REQUESTS A SUGGESTED NEXT SEMESTER FROM THE SERVER
   async function generatePlan() {
     const goal = document.getElementById('goalSelect').value;
     document.getElementById('planSpinner').style.display = 'block';
@@ -1043,6 +1059,7 @@ function renderPathway(data) {
     }
   }
 
+  // DISPLAYS THE RECOMMENDED COURSE PLAN
   function displayPlan(classes) {
     const planList = document.getElementById('planList');
     planList.innerHTML = '';
@@ -1057,10 +1074,12 @@ function renderPathway(data) {
     document.getElementById('planResults').classList.remove('hidden');
   }
 
+  // PLACEHOLDER FOR A FUTURE CALENDAR EXPORT FEATURE
   function exportCalendar() {
     alert('Calendar export — coming soon!');
   }
 
+  // CLEARS SAVED DATA AND RESETS THE PAGE
   function startOver() {
     localStorage.removeItem('auditData');
     location.reload();

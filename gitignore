@@ -1,0 +1,5 @@
+node_modules/
+uploads/
+.env
+*.jfif.bak
+.DS_Store
