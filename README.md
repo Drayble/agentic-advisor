@@ -92,7 +92,6 @@ http://localhost:3000
 ## Built At
 
 Marist College Campus Enterprise Computing Hackathon  
-Solo build · ~21 hours
 
 ---
 
