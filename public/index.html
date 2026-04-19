@@ -1074,10 +1074,47 @@ function renderPathway(data) {
     document.getElementById('planResults').classList.remove('hidden');
   }
 
-  // PLACEHOLDER FOR A FUTURE CALENDAR EXPORT FEATURE
+  // PLACEHOLDER VALUES FOR A FUTURE CALENDAR EXPORT FEATURE
   function exportCalendar() {
-    alert('Calendar export — coming soon!');
+  if (!recommendedClasses || recommendedClasses.length === 0) {
+    alert('Generate a semester plan first.');
+    return;
   }
+
+  const slots = [
+    { days: ['MO', 'WE'], start: '100000', end: '111500' },
+    { days: ['TU', 'TH'], start: '130000', end: '141500' },
+    { days: ['MO', 'WE', 'FR'], start: '090000', end: '095000' },
+    { days: ['TU', 'TH'], start: '103000', end: '114500' },
+    { days: ['MO', 'WE'], start: '140000', end: '151500' },
+  ];
+
+  let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nCALSCALE:GREGORIAN\r\nPRODID:-//Agentic Advisor//EN\r\n';
+
+  recommendedClasses.forEach((cls, i) => {
+    const slot = slots[i % slots.length];
+    const byDay = slot.days.join(',');
+    ics += 'BEGIN:VEVENT\r\n';
+    ics += `SUMMARY:${cls.code} - ${cls.name}\r\n`;
+    ics += `DTSTART;TZID=America/New_York:20250825T${slot.start}\r\n`;
+    ics += `DTEND;TZID=America/New_York:20250825T${slot.end}\r\n`;
+    ics += `RRULE:FREQ=WEEKLY;BYDAY=${byDay};UNTIL=20251215T235959Z\r\n`;
+    ics += `DESCRIPTION:${cls.reason}\r\n`;
+    ics += 'END:VEVENT\r\n';
+  });
+
+  ics += 'END:VCALENDAR';
+
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'agentic-advisor-semester.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
   // CLEARS SAVED DATA AND RESETS THE PAGE
   function startOver() {
